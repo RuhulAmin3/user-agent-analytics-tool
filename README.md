@@ -14,7 +14,7 @@ A small Express.js app that collects and visualizes user-agent strings from inco
 
 ## Install
 ```bash
-git clone <repo-url>
+git clone https://github.com/RuhulAmin3/user-agent-analytics-tool
 cd "Assignment - two"
 npm install
 ```
