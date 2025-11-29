@@ -45,5 +45,3 @@ Query params supported for dashboard and exports:
 - Routes: `src/routes/analytics.js`.
 - Controllers: `src/controllers/analyticsController.js`.
 - Models: `src/models/userAgentModel.js`.
-
-If you want, I can add a small database or switch storage to a JSON file or SQLite for persistence.
