@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User-Agent Analytics</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -136,8 +137,9 @@
     </div>
 
     <script>
-        // Chart data
+        // Initial analytics data from server
         const analyticsData = JSON.parse('<%- JSON.stringify(analytics) %>');
+        const useRealData = JSON.parse('<%- JSON.stringify(useRealData) %>');
         
         // Initialize chart
         const ctx = document.getElementById('analyticsChart').getContext('2d');
@@ -178,6 +180,30 @@
                 }
             }
         });
+
+        function updateUI(counts) {
+            // Update chart
+            chart.data.labels = Object.keys(counts);
+            chart.data.datasets[0].data = Object.values(counts);
+            chart.update();
+
+            // Update stats grid
+            const grid = document.querySelector('.stats-grid');
+            grid.innerHTML = Object.entries(counts).map(([client, count]) => `
+                <div class="stat-card">
+                    <div class="stat-number">${count}</div>
+                    <div>${client}</div>
+                </div>
+            `).join('');
+        }
+
+        // Enable realtime updates only when viewing real data
+        if (useRealData) {
+            const socket = io();
+            socket.on('userAgentCounts', (counts) => {
+                updateUI(counts);
+            });
+        }
 
         // Utility functions
         function getQueryParams() {

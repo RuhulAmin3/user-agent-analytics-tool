@@ -1,13 +1,18 @@
 import express from "express";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 import analyticsRoutes from "./src/routes/analytics.js";
 import { analyticsController } from "./src/controllers/analyticsController.js";
+import userAgentModel from "./src/models/userAgentModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIOServer(server);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -20,10 +25,16 @@ app.set("view engine", "ejs");
 app.set("views", join(__dirname, "src", "views"));
 
 // Store real user-agent data (runs for all requests before routes)
-app.use((req, res, next) => {
-  const userAgent = req.headers["user-agent"]; 
-  if (userAgent && req.path !== "/favicon.ico") { 
+app.use((req, _res, next) => {
+  const userAgent = req.headers["user-agent"];
+  if (userAgent && req.path !== "/favicon.ico") {
     analyticsController.storeUserAgent(userAgent);
+    // Broadcast updated analytics to all connected clients
+    try {
+      const counts = userAgentModel.getRealAnalytics();
+      io.emit("userAgentCounts", counts);
+    } catch (e) {
+    }
   }
   next();
 });
@@ -61,6 +72,9 @@ app.get("/", (_req, res) => {
   `);
 });
 
-app.listen(PORT, () => {
+io.on("connection", () => {
+});
+
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
